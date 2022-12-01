@@ -26,7 +26,6 @@ void fillVec(std::string name, std::vector<T>& vec)
         exit(1);
     }
 
-    T element;
     std::string line;
     while (std::getline(inputFile, line))
     {

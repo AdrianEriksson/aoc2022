@@ -1,4 +1,4 @@
 #! /bin/sh
 
-cd build ; ./aoc ; cd ..
+cd build ; ./aoc2022 ; cd ..
 
