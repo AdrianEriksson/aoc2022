@@ -29,8 +29,8 @@ std::ostream& operator << (std::ostream& os, std::vector<std::vector<T>>& mat)
 
 int main()
 {
-	std::vector<std::string> vector;
-	Parser::fillVec("day1_partOne.txt", vector);
-	Solutions::DayOne::partOne(vector);
-	Solutions::DayOne::partTwo(vector);
+	std::vector<std::vector<char>> input;
+	Parser::fillMatrix("day2_partOne.txt", input);
+	Solutions::DayTwo::partOne(input);
+	Solutions::DayTwo::partTwo(input);
 }
