@@ -76,7 +76,6 @@ void partOne(std::vector<std::vector<char>> input)
     std::cout << "Day 2, part 1: " << score << std::endl;
 }
 
-
 void partTwo(std::vector<std::vector<char>> input)
 {
     int score{0};
@@ -101,5 +100,66 @@ void partTwo(std::vector<std::vector<char>> input)
     }
     std::cout << "Day 2, part 2: " << score << std::endl;
 }
+}  // DayTwo
+
+namespace DayThree
+{
+int getScore(char ch)
+{
+    const int chVal{static_cast<int>(ch)};
+    if (std::isupper(chVal))
+    {
+        return chVal - 38;
+    }
+    return chVal - 96;
 }
+
+void partOne(std::vector<std::string> input)
+{
+    int score {0};
+    for (std::string& elem : input)
+    {
+        std::string first{elem.substr(0, elem.size() / 2)};
+        std::string second{elem.substr(elem.size() / 2, elem.size())};
+
+        std::sort(first.begin(), first.end());
+        std::sort(second.begin(), second.end());
+
+        std::vector<char> intersection;
+        std::set_intersection(first.begin(), first.end(), second.begin(), second.end(),
+                              std::back_inserter(intersection));
+
+        score += getScore(intersection[0]);
+    }
+    std::cout << "Day 3, part 1: " << score << std::endl;
+}
+
+void partTwo(std::vector<std::string> input)
+{
+    int score {0};
+    for (uint16_t i = 0; i < input.size(); i += 3)
+    {
+        std::string first{input[i]};
+        std::string second{input[i + 1]};
+        std::string third{input[i + 2]};
+
+        std::sort(first.begin(), first.end());
+        std::sort(second.begin(), second.end());
+        std::sort(third.begin(), third.end());
+
+        std::string firstIntersection;
+        std::set_intersection(first.begin(), first.end(), second.begin(), second.end(),
+                              std::back_inserter(firstIntersection));
+        
+        std::sort(firstIntersection.begin(), firstIntersection.end());
+
+        std::string secondIntersection;
+        std::set_intersection(firstIntersection.begin(), firstIntersection.end(), third.begin(), third.end(),
+                              std::back_inserter(secondIntersection));
+        
+        score += getScore(secondIntersection[0]);
+    }
+    std::cout << "Day 3, part 2: " << score << std::endl;
+}
+}  // DayThree
 }  // TestSolution
