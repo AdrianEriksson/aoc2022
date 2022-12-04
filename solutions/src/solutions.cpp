@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <sstream>
 
 namespace Solutions
 {
@@ -162,4 +163,69 @@ void partTwo(std::vector<std::string> input)
     std::cout << "Day 3, part 2: " << score << std::endl;
 }
 }  // DayThree
+
+namespace DayFour
+{
+struct Assignments
+{
+    Assignments(int lb, int up) : lowerBound(lb), upperBound(up) {};
+    int lowerBound;
+    int upperBound;
+
+    bool operator<(Assignments other)
+    {
+        return (lowerBound >= other.lowerBound) && (upperBound <= other.upperBound);
+    }
+
+    bool overlaps(Assignments other)
+    { 
+        return (upperBound >= other.lowerBound && lowerBound <= other.upperBound);
+    }
+};
+
+std::pair<Assignments, Assignments> extractAssignmentPair(std::string pair)
+{
+    std::istringstream ssPair(pair);
+    std::string assignee;
+    std::vector<int> sections;
+    while (std::getline(ssPair, assignee, ','))
+    {
+        std::istringstream ssAssignee(assignee);
+        std::string section;
+        while (std::getline(ssAssignee, section, '-'))
+        {
+            sections.push_back(std::stoi(section));
+        }
+    }
+    return std::make_pair<Assignments, Assignments>(Assignments(sections[0], sections[1]), Assignments(sections[2], sections[3]));
+}
+
+void partOne(std::vector<std::string> input)
+{
+    int score{0};
+    for (std::string pair : input)
+    {
+        auto assignmentPair{extractAssignmentPair(pair)};
+        if (assignmentPair.first < assignmentPair.second || assignmentPair.second < assignmentPair.first)
+        {
+            score++;
+        }
+    }
+    std::cout << "Day 4, part 1: " << score << std::endl;
+}
+
+void partTwo(std::vector<std::string> input)
+{
+    int score{0};
+    for (std::string pair : input)
+    {
+        auto assignmentPair{extractAssignmentPair(pair)};
+        if (assignmentPair.second.overlaps(assignmentPair.first))
+        {
+            score++;
+        }
+    }
+    std::cout << "Day 4, part 2: " << score << std::endl;
+}
+}  // DayFour
 }  // TestSolution

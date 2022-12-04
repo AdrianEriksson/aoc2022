@@ -20,4 +20,10 @@ namespace DayThree
 void partOne(std::vector<std::string> input);
 void partTwo(std::vector<std::string> input);
 }  // DayThree
+
+namespace DayFour
+{
+void partOne(std::vector<std::string> input);
+void partTwo(std::vector<std::string> input);
+}  // DayFour
 }  // TestSolution
