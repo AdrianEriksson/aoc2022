@@ -5,6 +5,8 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <string_view>
+#include <stack>
 
 namespace Solutions
 {
@@ -228,4 +230,122 @@ void partTwo(std::vector<std::string> input)
     std::cout << "Day 4, part 2: " << score << std::endl;
 }
 }  // DayFour
+
+namespace DayFive
+{
+int getDepthOfStacks(std::vector<std::string>& input)
+{
+    auto result{std::find_if(input.begin(), input.end(), [](std::string &row)
+                             { return row.starts_with(std::string_view(" 1 ")); })};
+
+    if (result != input.end())
+    {
+        return std::distance(input.begin(), result);
+    }
+    return 0;
+}
+
+int getNumberOfStacks(std::vector<std::string>& input, int stackDepth)
+{
+    return input[stackDepth].at(input[stackDepth].size() - 2) - '0';
+}
+
+std::vector<std::stack<char>> getStacks(std::vector<std::string>& input)
+{
+    const int depth{getDepthOfStacks(input)};
+    const int entities{getNumberOfStacks(input, depth)};
+    std::vector<std::stack<char>> stacks(entities);
+    std::for_each_n(input.rend() - depth, depth, [&](std::string& row)
+    {
+        for (uint16_t i = 0; i < entities; i++)
+        {
+            if (char candidate = row[1 + i*4]; candidate != ' ')
+            {
+                stacks[i].push(candidate);
+            }
+        }
+    });
+    return stacks;
+}
+
+std::vector<std::vector<char>> getStacksAsVectors(std::vector<std::string>& input)
+{
+    const int depth{getDepthOfStacks(input)};
+    const int entities{getNumberOfStacks(input, depth)};
+    std::vector<std::vector<char>> stacks(entities);
+    std::for_each_n(input.rend() - depth, depth, [&](std::string& row)
+    {
+        for (uint16_t i = 0; i < entities; i++)
+        {
+            if (char candidate = row[1 + i*4]; candidate != ' ')
+            {
+                stacks[i].push_back(candidate);
+            }
+        }
+    });
+    return stacks;
+}
+
+std::vector<std::string> getInstruction(std::string inputLine)
+{
+    std::istringstream ssInputLine(inputLine);
+    std::string input;
+    std::vector<std::string> inputs;
+    while (std::getline(ssInputLine, input, ' '))
+    {
+        inputs.push_back(input);
+    }
+    return inputs;
+}
+
+void partOne(std::vector<std::string> input)
+{
+    const int instructionStart{getDepthOfStacks(input) + 2};
+    std::vector<std::stack<char>> stacks{getStacks(input)};
+    std::for_each(input.begin() + instructionStart, input.end(), [&](std::string &inputLine)
+                  {
+                    std::vector<std::string> inputs{getInstruction(inputLine)};
+                    const int move{std::stoi(inputs[1])};
+                    const int source{std::stoi(inputs[3]) - 1};
+                    const int target{std::stoi(inputs[5]) - 1};
+
+                    for (int i = 0; i < move; i++)
+                    {
+                        stacks[target].push(stacks[source].top());
+                        stacks[source].pop();
+                    } });
+
+    std::string result;
+    for (std::stack<char> stack : stacks)
+    {
+        result += stack.top();
+    }
+    std::cout << "Day 5, part 1: " << result << std::endl;
+}
+
+void partTwo(std::vector<std::string> input)
+{
+    const int instructionStart{getDepthOfStacks(input) + 2};
+    std::vector<std::vector<char>> stacks{getStacksAsVectors(input)};
+
+    std::for_each(input.begin() + instructionStart, input.end(), [&](std::string &inputLine)
+                  {
+                    std::vector<std::string> inputs{getInstruction(inputLine)};
+                    const int move{std::stoi(inputs[1])};
+                    const int source{std::stoi(inputs[3]) - 1};
+                    const int target{std::stoi(inputs[5]) - 1};
+                    stacks[target].insert(stacks[target].end(), 
+                        std::make_move_iterator(stacks[source].end() - move),
+                        std::make_move_iterator(stacks[source].end()));
+                    stacks[source].erase(stacks[source].end() - move, stacks[source].end()); });
+
+    std::string result;
+    for (std::vector<char> stack : stacks)
+    {
+        result += stack.back();
+    }
+
+    std::cout << "Day 5, part 2: " << result << std::endl;
+}
+}  // DayFive
 }  // TestSolution

@@ -30,7 +30,7 @@ std::ostream& operator << (std::ostream& os, std::vector<std::vector<T>>& mat)
 int main()
 {
 	std::vector<std::string> input;
-	Parser::fillVec("day4_partOne.txt", input);
-	Solutions::DayFour::partOne(input);
-	Solutions::DayFour::partTwo(input);
+	Parser::fillVec("day5_partOne.txt", input);
+	Solutions::DayFive::partOne(input);
+	Solutions::DayFive::partTwo(input);
 }
