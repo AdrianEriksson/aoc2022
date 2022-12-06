@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string_view>
 #include <stack>
+#include <list>
 
 namespace Solutions
 {
@@ -348,4 +349,69 @@ void partTwo(std::vector<std::string> input)
     std::cout << "Day 5, part 2: " << result << std::endl;
 }
 }  // DayFive
+
+namespace DaySix
+{
+bool hasDuplicate(std::list<char> candidate, int uniques)
+{
+    candidate.sort();
+    candidate.unique();
+
+    if (candidate.size() < uniques)
+    {
+        return true;
+    } 
+    return false;
+}
+
+void partOne(std::string input)
+{
+    int position{0};
+    std::list<char> candidateMarker{};
+    for (int i = 3; i < input.size(); i++)
+    {
+        if (candidateMarker.empty())
+        {
+            candidateMarker.insert(candidateMarker.end(), input.begin(), input.begin() + 4);
+        }
+        else
+        {
+            candidateMarker.pop_front();
+            candidateMarker.push_back(input[i]);
+        }
+
+        if (!hasDuplicate(candidateMarker, 4))
+        {
+            position = i;
+            break;
+        }
+    }
+    std::cout << "Day 6, part 1: " << ++position << std::endl;
+}
+
+void partTwo(std::string input)
+{
+    int position{0};
+    std::list<char> candidateMarker{};
+    for (int i = 13; i < input.size(); i++)
+    {
+        if (candidateMarker.empty())
+        {
+            candidateMarker.insert(candidateMarker.end(), input.begin(), input.begin() + 14);
+        }
+        else
+        {
+            candidateMarker.pop_front();
+            candidateMarker.push_back(input[i]);
+        }
+
+        if (!hasDuplicate(candidateMarker, 14))
+        {
+            position = i;
+            break;
+        }
+    }
+    std::cout << "Day 6, part 2: " << ++position << std::endl;
+}
+}  // DaySix
 }  // TestSolution
