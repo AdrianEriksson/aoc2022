@@ -31,11 +31,17 @@ namespace DayFive
 {
 void partOne(std::vector<std::string> input);
 void partTwo(std::vector<std::string> input);
-}  // DaySix
+}  // DayFive
 
 namespace DaySix
 {
 void partOne(std::string input);
 void partTwo(std::string input);
 }  // DaySix
+
+namespace DaySeven
+{
+void partOne(std::vector<std::string> input);
+void partTwo(std::vector<std::string> input);
+}  // DaySeven
 }  // TestSolution

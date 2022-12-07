@@ -8,6 +8,8 @@
 #include <string_view>
 #include <stack>
 #include <list>
+#include <optional>
+#include <memory>
 
 namespace Solutions
 {
@@ -414,4 +416,154 @@ void partTwo(std::string input)
     std::cout << "Day 6, part 2: " << ++position << std::endl;
 }
 }  // DaySix
+
+namespace DaySeven
+{
+struct File
+{
+    explicit File(std::string name, uint64_t size) : name_(name), size_(size) {}
+
+    const std::string name_;
+    const uint64_t size_;
+};
+
+struct DirectoryNode
+{
+    DirectoryNode(std::string name, std::shared_ptr<DirectoryNode> parent) : name_(name), parent_(parent) {}
+
+    void addFile(std::string name, uint64_t size) { files_.emplace_back(name, size); }
+    void addChild(std::shared_ptr<DirectoryNode> child) { children_.push_back(child); } 
+
+    std::vector<std::shared_ptr<DirectoryNode>> children_;
+    std::shared_ptr<DirectoryNode> parent_;
+    std::vector<File> files_;
+    const std::string name_;
+    uint64_t size_{0};
+};
+
+std::vector<std::string> getInstruction(std::string inputLine)
+{
+    std::istringstream ssInputLine(inputLine);
+    std::string input;
+    std::vector<std::string> inputs;
+    while (std::getline(ssInputLine, input, ' '))
+    {
+        inputs.emplace_back(input);
+    }
+    return inputs;
+}
+
+std::shared_ptr<DirectoryNode> populateDirectoryTree(std::vector<std::string>& input)
+{
+    std::shared_ptr<DirectoryNode> currentDir{std::make_shared<DirectoryNode>("root", nullptr)};
+    for (std::string line : input)
+    {
+        std::vector<std::string> command(getInstruction(line));
+        if (command[0] == "$")
+        {
+            if (command[1] == "cd")
+            {
+                if (command[2] == "..")
+                {
+                    currentDir = currentDir->parent_;
+                }
+                else
+                {   
+                    std::shared_ptr<DirectoryNode> newDir{std::make_shared<DirectoryNode>(command[2], currentDir)};
+                    currentDir->addChild(newDir);
+                    currentDir = newDir;
+                }
+            }
+            else if (command[1] == "ls")
+            {
+                continue;
+            }
+        }
+        else if (command[0] == "dir")
+        {
+            continue;
+        }
+        else
+        {
+            currentDir->addFile(command[1], std::stoll(command[0]));
+        }
+    }
+
+    while(currentDir.get()->name_ != "root")
+    {
+        currentDir = currentDir->parent_;
+    }
+    return currentDir;
+}
+
+uint64_t traverseTreeAndSetSize(std::shared_ptr<DirectoryNode> node)
+{
+    uint64_t size{0};
+    for (File file : node.get()->files_)
+    {
+        size += file.size_;
+    }
+    node.get()->size_ = size;
+
+    if (node.get()->children_.empty())
+    {
+        return node.get()->size_ ;
+    }
+
+    for (auto child : node.get()->children_)
+    {
+        node.get()->size_ += traverseTreeAndSetSize(child);
+    }
+    return node.get()->size_;
+}
+
+void traverseTreePartOne(std::shared_ptr<DirectoryNode> node, uint64_t& result)
+{
+    if (node.get()->size_ <= 100000)
+    {
+        result += node.get()->size_;
+    }
+
+    for (auto child : node.get()->children_)
+    {
+        traverseTreePartOne(child, result);
+    }
+    return;
+}
+
+void traverseTreePartTwo(std::shared_ptr<DirectoryNode> node, std::vector<long long> &candidates, uint64_t threshold)
+{
+    if (node.get()->size_ >= threshold)
+    {
+        candidates.push_back(node.get()->size_);
+    }
+
+    for (auto child : node.get()->children_)
+    {
+        traverseTreePartTwo(child, candidates, threshold);
+    }
+    return;
+}
+
+void partOne(std::vector<std::string> input)
+{
+    std::shared_ptr<DirectoryNode> root{populateDirectoryTree(input)};
+    traverseTreeAndSetSize(root);
+    uint64_t result{0};
+    traverseTreePartOne(root, result);
+    std::cout << "Day 7, part 1: " << result << std::endl;
+}
+
+void partTwo(std::vector<std::string> input)
+{
+    std::shared_ptr<DirectoryNode> root{populateDirectoryTree(input)};
+    traverseTreeAndSetSize(root);
+    
+    std::vector<long long> candidateDirs;
+    traverseTreePartTwo(root, candidateDirs, root.get()->size_ - 40000000);
+    std::sort(candidateDirs.begin(), candidateDirs.end());
+    
+    std::cout << "Day 7, part 2: " << candidateDirs[0] << std::endl;
+}
+}  // DaySeven
 }  // TestSolution
