@@ -566,4 +566,139 @@ void partTwo(std::vector<std::string> input)
     std::cout << "Day 7, part 2: " << candidateDirs[0] << std::endl;
 }
 }  // DaySeven
-}  // TestSolution
+
+namespace DayEight
+{
+bool isVisible(std::pair<int, int> coordinate, std::vector<std::vector<char>>& input)
+{
+    std::array<bool, 4> exposedSides{true, true, true, true};
+    for (int i = coordinate.second - 1; i >= 0; --i)
+    {
+        if (input[coordinate.first][i] >= input[coordinate.first][coordinate.second])
+        {
+            exposedSides[0] = false;
+            break;
+        }
+    }
+
+    const std::size_t width{input[0].size()};
+    for (int i = coordinate.second + 1; i < width; i++)
+    {
+        if (input[coordinate.first][i] >= input[coordinate.first][coordinate.second])
+        {
+            exposedSides[1] = false;
+            break;
+        }
+    }
+
+    for (int i = coordinate.first - 1; i >= 0; i--)
+    {
+        if (input[i][coordinate.second] >= input[coordinate.first][coordinate.second])
+        {
+            exposedSides[2] = false;
+            break;
+        }
+    }
+
+    const std::size_t height{input.size()};
+    for (int i = coordinate.first + 1; i < height; i++)
+    {
+        if (input[i][coordinate.second] >= input[coordinate.first][coordinate.second])
+        {
+            exposedSides[3] = false;
+            break;
+        }
+    }
+
+    bool isVisible{false};
+    std::for_each(exposedSides.begin(), exposedSides.end(), [&](const bool side) { if (side) { isVisible = true; } });
+    return isVisible;
+}
+
+int getScenicScore(std::pair<int, int> coordinate, std::vector<std::vector<char>>& input)
+{
+    std::array<int, 4> scenicDistances{0, 0, 0, 0};
+    for (int i = coordinate.second - 1; i >= 0; --i)
+    {
+        scenicDistances[0]++;
+        if (input[coordinate.first][i] >= input[coordinate.first][coordinate.second])
+        {
+            break;
+        }
+    }
+
+    const std::size_t width{input[0].size()};
+    for (int i = coordinate.second + 1; i < width; i++)
+    {
+        scenicDistances[1]++;
+        if (input[coordinate.first][i] >= input[coordinate.first][coordinate.second])
+        {
+            break;
+        }
+    }
+
+    for (int i = coordinate.first - 1; i >= 0; i--)
+    {
+        scenicDistances[2]++;
+        if (input[i][coordinate.second] >= input[coordinate.first][coordinate.second])
+        {
+            break;
+        }
+    }
+    
+    const std::size_t height{input.size()};
+    for (int i = coordinate.first + 1; i < height; i++)
+    {
+        scenicDistances[3]++;
+        if (input[i][coordinate.second] >= input[coordinate.first][coordinate.second])
+        {
+            break;
+        }
+    }
+    
+    return scenicDistances[0] * scenicDistances[1] * scenicDistances[2] * scenicDistances[3];
+}
+
+void partOne(std::vector<std::vector<char>> input)
+{
+    std::vector<std::pair<int, int>> visibles;
+    const std::size_t width{input[0].size()};
+    const std::size_t height{input.size()};
+    const std::size_t edges{2 * width + 2 * height - 4};
+
+    for (int i = 1; i < height - 1; i++)
+    {
+        for (int j = 1; j < width - 1; j++)
+        {
+            std::pair<int, int> coordinate{std::make_pair(i, j)};
+            if (isVisible(coordinate, input))
+            {
+                visibles.push_back(coordinate);
+            }
+        }
+    }
+
+    std::cout << "Day 7, part 1: " << visibles.size() + edges << std::endl;
+}
+
+void partTwo(std::vector<std::vector<char>> input)
+{
+    std::vector<int> scenicScores;
+    const std::size_t width{input[0].size()};
+    const std::size_t height{input.size()};
+    const std::size_t edges{2 * width + 2 * height - 4};
+
+    for (int i = 1; i < height - 1; i++)
+    {
+        for (int j = 1; j < width - 1; j++)
+        {
+            std::pair<int, int> coordinate{std::make_pair(i, j)};
+            scenicScores.emplace_back(getScenicScore(coordinate, input));
+        }
+    }
+    std::sort(scenicScores.begin(), scenicScores.end(), std::greater<int>());
+
+    std::cout << "Day 7, part 2: " << scenicScores[0] << std::endl;
+}
+}  // DayEight
+}  // Solutions
