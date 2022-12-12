@@ -701,4 +701,228 @@ void partTwo(std::vector<std::vector<char>> input)
     std::cout << "Day 7, part 2: " << scenicScores[0] << std::endl;
 }
 }  // DayEight
+
+namespace DayEleven
+{
+enum OperationType
+{
+    Addtion,
+    Multiplication,
+    Square
+};
+
+struct Operation
+{
+    explicit Operation(OperationType type, uint8_t val) : type_(type), val_(val) {}
+    uint64_t operate(uint64_t item) const
+    {
+        switch (type_)
+        {
+        case OperationType::Addtion:
+            return item + val_;
+            break;
+        case OperationType::Multiplication:
+            return item * val_;
+        case OperationType::Square:
+            return item*item;
+        }
+    }
+    std::string toString() const
+    {
+        switch (type_)
+        {
+        case OperationType::Addtion:
+            return "+ " + std::to_string(val_);
+            break;
+        case OperationType::Multiplication:
+            return "* " + std::to_string(val_);
+        case OperationType::Square:
+            return "* old";
+        }
+    }
+    const OperationType type_;
+    const uint8_t val_;
+};
+
+struct Monkey
+{
+    explicit Monkey(uint8_t id, std::list<uint64_t> items, Operation operation, uint8_t testVal, std::pair<uint8_t, uint8_t> partners) 
+        : id_(id), items_(items), operation_(operation), testVal_(testVal), partners_(partners){};
+
+    void addItem(uint64_t item) { items_.emplace_back(item); }
+    void popItem() { items_.pop_front(); }
+    uint64_t getItem() const { return items_.front(); }
+    void doOperation() 
+    { 
+        inspections_++;
+        items_.front() = operation_.operate(items_.front()); 
+    }
+    void doReduction() { items_.front() /= 3; }
+    uint8_t doTest()
+    { 
+        if (items_.front() % testVal_ == 0)
+        {
+            return std::get<0>(partners_);
+        }
+        return std::get<1>(partners_);
+    }
+    
+    const uint8_t id_;
+    uint64_t inspections_{0};
+    std::list<uint64_t> items_{};
+    const Operation operation_;
+    const uint8_t testVal_;
+    const std::pair<uint8_t, uint8_t> partners_;
+};
+
+std::ostream& operator << (std::ostream& os, const Monkey& monkey)
+{
+    os << "Monkey " << std::to_string(monkey.id_) << ":\n"
+        << "Starting items: ";
+    for (uint64_t item : monkey.items_)
+    {
+        os << std::to_string(item) << " ";
+    }
+    os << "\nOperation: new = old " << monkey.operation_.toString() << "\n"
+        << "Test: divisible by " << std::to_string(monkey.testVal_) << "\n"
+        << "\tIf true: throw to monkey " << std::to_string(std::get<0>(monkey.partners_)) << "\n"
+        << "\tIf true: throw to monkey " << std::to_string(std::get<1>(monkey.partners_)) << "\n"
+        << "Inspections: " << std::to_string(monkey.inspections_) << "\n";
+    return os;
+}
+
+std::vector<Monkey> getMonkeys(std::vector<std::vector<std::string>> input)
+{
+    std::vector<Monkey> monkeys;
+
+    uint8_t id;
+    std::list<uint64_t> items;
+    OperationType operationType;
+    uint8_t operationVal{0};
+    uint8_t testVal;
+    uint8_t partnerTrue{0};
+    uint8_t partnerFalse{0};
+    for (uint8_t i = 0; i < input.size(); i++)
+    {
+        if (input[i].empty())
+        {
+            monkeys.emplace_back(id, items, Operation(operationType, operationVal), testVal, std::make_pair(partnerTrue, partnerFalse));
+            items.clear();
+        }
+        else if (input[i][0] == "Monkey")
+        {
+            std::string idStr(input[i][1]);
+            id = std::stoi(idStr.substr(0, idStr.size()-1));
+        }
+        else if (input[i][0] == "Starting")
+        {
+            std::for_each(input[i].begin() + 2, input[i].end(),
+                    [&] (std::string itemStr) 
+                        {
+                            if (itemStr.ends_with(','))
+                            {
+                                items.emplace_back(std::stoi(itemStr.substr(0, itemStr.size()-1)));
+                                return;
+                            }
+                            items.emplace_back(std::stoi(itemStr));
+                            return;
+                        });
+        }
+        else if (input[i][0] == "Operation:")
+        {
+            if (input[i][4] == "+")
+            {
+                operationType = OperationType::Addtion;
+                operationVal  = std::stoi(input[i][5]);
+            }
+            else if (input[i][5] == "old")
+            {
+                operationType = OperationType::Square;
+                operationVal  = 0;
+            }
+            else
+            {
+                operationType = OperationType::Multiplication;
+                operationVal  = std::stoi(input[i][5]);
+            }
+        }
+        else if (input[i][0] == "Test:")
+        {
+            testVal = std::stoi(input[i][3]);
+        }
+        else if (input[i][0] == "If" && input[i][1] == "true:")
+        {
+            partnerTrue = std::stoi(input[i][5]);
+        }
+        else if (input[i][0] == "If" && input[i][1] == "false:")
+        {
+            partnerFalse = std::stoi(input[i][5]);
+        }
+    }
+    return monkeys;
+}
+
+void partOne(std::vector<std::vector<std::string>> input)
+{
+    std::vector<Monkey> monkeys{getMonkeys(input)};
+    uint8_t rounds{20};
+    for (uint8_t i = 0; i < rounds; i++)
+    {
+        for (Monkey& monkey : monkeys)
+        {
+            uint8_t size = monkey.items_.size();
+            for (uint8_t j = 0; j < size; j++)
+            {
+                monkey.doOperation();
+                monkey.doReduction();
+                monkeys[monkey.doTest()].addItem(monkey.getItem());
+                monkey.popItem();
+            }
+        }
+    }
+    
+    std::vector<uint64_t> inspections;
+    for (auto& monkey : monkeys)
+    {
+        inspections.emplace_back(monkey.inspections_);
+    }
+    std::sort(inspections.begin(), inspections.end(), std::greater<uint64_t>());
+    std::cout << "Day 7, part 1: " << inspections[0]*inspections[1] << std::endl;
+}
+void partTwo(std::vector<std::vector<std::string>> input)
+{
+    std::vector<Monkey> monkeys{getMonkeys(input)};
+    uint16_t rounds{10000};
+    
+    uint32_t lcm = 1;
+    for (auto& monkey : monkeys)
+    {
+        lcm *= monkey.testVal_;
+    }
+
+    for (uint16_t i = 0; i < rounds; i++)
+    {
+        for (Monkey& monkey : monkeys)
+        {
+            uint16_t size = monkey.items_.size();
+            for (uint16_t j = 0; j < size; j++)
+            {
+                monkey.doOperation();
+                monkeys[monkey.doTest()].addItem(monkey.getItem() % lcm);
+                monkey.popItem();
+            }
+        }
+    }
+    
+    std::vector<uint64_t> inspections;
+    for (auto& monkey : monkeys)
+    {
+        inspections.emplace_back(monkey.inspections_);
+    }
+    std::sort(inspections.begin(), inspections.end(), std::greater<uint64_t>());
+
+    uint64_t score{inspections[0]*inspections[1]};
+    std::cout << "Day 7, part 2: " << score << std::endl;
+}
+}  // DayEleven
 }  // Solutions
