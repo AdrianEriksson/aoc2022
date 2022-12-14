@@ -925,4 +925,225 @@ void partTwo(std::vector<std::vector<std::string>> input)
     std::cout << "Day 7, part 2: " << score << std::endl;
 }
 }  // DayEleven
+
+namespace DayTwelve
+{
+struct Position
+{
+    Position(uint32_t id, char value) : id(id), value(value) {}
+
+    bool operator<(Position& other)
+    {
+        if (distance == other.distance)
+        {
+            return id < other.id;
+        }
+        return distance < other.distance;
+    }
+
+    bool visited{false};
+    uint32_t distance{INT32_MAX};
+    Position* previous{nullptr};
+
+    char value;
+    const uint32_t id;
+};
+
+std::vector<std::vector<Position>> getPositionGrid(std::vector<std::vector<char>> input)
+{
+    std::vector<std::vector<Position>> positionGrid;
+    uint32_t id = 1;
+    for (std::vector<char> row : input)
+    {
+        std::vector<Position> newRow;
+        for (char elem : row)
+        {
+            newRow.emplace_back(id++, elem);
+        }
+        positionGrid.push_back(newRow);
+    }
+    return positionGrid;
+}
+
+using Coordinate = std::pair<uint16_t, uint16_t>;
+
+Coordinate getTargetPosition(std::vector<std::vector<Position>>& positionGrid, char target)
+{
+    uint16_t height{static_cast<uint16_t>(positionGrid.size())};
+    uint16_t width{static_cast<uint16_t>(positionGrid[0].size())};
+    for (uint16_t i = 0; i < height; i++)
+    {
+        for (uint16_t j = 0; j < width; j++)
+        {
+            if (positionGrid[i][j].value == target)
+            {
+                return Coordinate(i, j);
+            }
+        }
+    }
+    return Coordinate(UINT16_MAX, UINT16_MAX);
+}
+
+std::vector<Coordinate> getTargetPositions(std::vector<std::vector<Position>>& positionGrid, char target)
+{
+    uint16_t height{static_cast<uint16_t>(positionGrid.size())};
+    uint16_t width{static_cast<uint16_t>(positionGrid[0].size())};
+    std::vector<Coordinate> coordinates;
+    for (uint16_t i = 0; i < height; i++)
+    {
+        for (uint16_t j = 0; j < width; j++)
+        {
+            if (positionGrid[i][j].value == target)
+            {
+                coordinates.emplace_back(i, j);
+            }
+        }
+    }
+    return coordinates;
+}
+
+bool isPossibility(Position& testPosition, Position& currentPosition)
+{
+    return !testPosition.visited && testPosition.value - 1 <= currentPosition.value &&
+            testPosition.distance > currentPosition.distance;
+}
+
+using PositionCoordinate = std::pair<Coordinate, Position*>;
+
+void updateDistanceAroundPosition(Coordinate currentCoordinate, std::vector<PositionCoordinate>& possibilities, std::vector<std::vector<Position>>& positions)
+{
+    uint16_t height{static_cast<uint16_t>(positions.size() - 1)};
+    uint16_t width{static_cast<uint16_t>(positions[0].size() -1)};
+
+    Position& currentPosition{positions[currentCoordinate.first][currentCoordinate.second]};
+
+    if (currentCoordinate.first > 0)
+    {
+        Position& abovePosition{positions[currentCoordinate.first - 1][currentCoordinate.second]};
+        if (isPossibility(abovePosition, currentPosition))
+        {
+            abovePosition.distance = currentPosition.distance + 1;
+            abovePosition.previous = &currentPosition;
+            possibilities.emplace_back(Coordinate(currentCoordinate.first - 1, currentCoordinate.second), &abovePosition);
+        }
+    }
+
+    if (currentCoordinate.first < height)
+    {
+        Position& belowPosition{positions[currentCoordinate.first + 1][currentCoordinate.second]};
+        if (isPossibility(belowPosition, currentPosition))
+        {
+            belowPosition.distance = currentPosition.distance + 1;
+            belowPosition.previous = &currentPosition;
+            possibilities.emplace_back(Coordinate(currentCoordinate.first + 1, currentCoordinate.second), &belowPosition);
+        }
+    }
+
+    if (currentCoordinate.second > 0)
+    {
+        Position& leftPosition{positions[currentCoordinate.first][currentCoordinate.second - 1]};
+        if (isPossibility(leftPosition, currentPosition))
+        {
+            leftPosition.distance = currentPosition.distance + 1;
+            leftPosition.previous = &currentPosition;
+            possibilities.emplace_back(Coordinate(currentCoordinate.first, currentCoordinate.second - 1), &leftPosition);
+        }
+    }
+
+    if (currentCoordinate.second < width)
+    {
+        Position& rightPosition{positions[currentCoordinate.first][currentCoordinate.second + 1]};
+        if (isPossibility(rightPosition, currentPosition))
+        {
+            rightPosition.distance = currentPosition.distance + 1;
+            rightPosition.previous = &currentPosition;
+            possibilities.emplace_back(Coordinate(currentCoordinate.first, currentCoordinate.second + 1), &rightPosition);
+        }
+    }
+}
+
+void partOne(std::vector<std::vector<char>> input)
+{   
+    std::vector<std::vector<Position>> positions{getPositionGrid(input)};
+    uint64_t numPositions{static_cast<uint32_t>(positions.size() * positions[0].size())};
+
+    Coordinate start{getTargetPosition(positions, 'S')};
+    Coordinate end{getTargetPosition(positions, 'E')};
+
+    positions[start.first][start.second].distance = 0;
+    positions[start.first][start.second].value = 'a';
+    positions[end.first][end.second].value = 'z';
+
+    std::vector<Position*> visited;
+    std::vector<PositionCoordinate> possibilities;
+    possibilities.emplace_back(Coordinate(start.first, start.second), &positions[start.first][start.second]);
+    while (!possibilities.empty())
+    {
+        std::sort(possibilities.begin(), possibilities.end(), [](PositionCoordinate first, PositionCoordinate second)
+                  { return *second.second < *first.second; });
+        
+        PositionCoordinate& currentPosition{possibilities.back()};
+        currentPosition.second->visited = true;
+        visited.push_back(currentPosition.second);
+
+        for (int i = possibilities.size() - 1; i >= 0; i--)
+        {
+            if (possibilities[i].second->visited)
+            {
+                possibilities.erase(possibilities.begin() + i);
+            }
+        }
+        
+        updateDistanceAroundPosition(currentPosition.first, possibilities, positions);
+    }
+    std::cout << "Day 12, part 1: " << positions[end.first][end.second].distance << std::endl;
+}
+
+void partTwo(std::vector<std::vector<char>> input)
+{
+    std::vector<std::vector<Position>> positions_default{getPositionGrid(input)};
+
+    Coordinate start{getTargetPosition(positions_default, 'S')};
+    Coordinate end{getTargetPosition(positions_default, 'E')};
+
+    positions_default[start.first][start.second].value = 'a';
+
+    std::vector<Coordinate> coordinates{getTargetPositions(positions_default, 'a')};
+    std::vector<uint16_t> scores;
+    for (Coordinate& coordinate : coordinates)
+    {
+        std::vector<std::vector<Position>> positions{getPositionGrid(input)};
+        positions[start.first][start.second].value = 'a';
+        positions[end.first][end.second].value = 'z';
+        positions[coordinate.first][coordinate.second].distance = 0;
+
+        std::vector<Position*> visited;
+        std::vector<PositionCoordinate> possibilities;
+        possibilities.emplace_back(Coordinate(coordinate.first, coordinate.second), &positions[coordinate.first][coordinate.second]);
+        while (!possibilities.empty())
+        {
+            std::sort(possibilities.begin(), possibilities.end(), [](PositionCoordinate first, PositionCoordinate second)
+                    { return *second.second < *first.second; });
+
+            PositionCoordinate& currentPosition{possibilities.back()};
+            currentPosition.second->visited = true;
+            visited.push_back(currentPosition.second);
+
+            for (int i = possibilities.size() - 1; i >= 0; i--)
+            {
+                if (possibilities[i].second->visited)
+                {
+                    possibilities.erase(possibilities.begin() + i);
+                }
+            }
+
+            updateDistanceAroundPosition(currentPosition.first, possibilities, positions);
+        }
+        scores.push_back(positions[end.first][end.second].distance);
+    }
+    std::sort(scores.begin(), scores.end());
+
+    std::cout << "Day 12, part 2: " << scores[0] << std::endl;
+}
+}  // DayTwelve
 }  // Solutions
