@@ -51,6 +51,12 @@ void partOne(std::vector<std::vector<char>> input);
 void partTwo(std::vector<std::vector<char>> input);
 }  // DayEight
 
+namespace DayNine
+{
+void partOne(std::vector<std::vector<std::string>> input);
+void partTwo(std::vector<std::vector<std::string>> input);
+}  // DayEight
+
 namespace DayEleven
 {
 void partOne(std::vector<std::vector<std::string>> input);

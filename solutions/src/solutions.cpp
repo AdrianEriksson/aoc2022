@@ -678,7 +678,7 @@ void partOne(std::vector<std::vector<char>> input)
         }
     }
 
-    std::cout << "Day 7, part 1: " << visibles.size() + edges << std::endl;
+    std::cout << "Day 8, part 1: " << visibles.size() + edges << std::endl;
 }
 
 void partTwo(std::vector<std::vector<char>> input)
@@ -698,9 +698,136 @@ void partTwo(std::vector<std::vector<char>> input)
     }
     std::sort(scenicScores.begin(), scenicScores.end(), std::greater<int>());
 
-    std::cout << "Day 7, part 2: " << scenicScores[0] << std::endl;
+    std::cout << "Day 8, part 2: " << scenicScores[0] << std::endl;
 }
 }  // DayEight
+
+namespace DayNine
+{
+using Instruction = std::pair<char, uint8_t>;
+using Instructions = std::list<Instruction>;
+using Grid = std::vector<std::vector<char>>;
+using Coordinate = std::pair<uint16_t, uint16_t>;
+
+Instructions getInstructions(std::vector<std::vector<std::string>>& input)
+{
+    Instructions instructions;
+    for (auto& rawInstruction : input)
+    {
+        instructions.emplace_back(rawInstruction[0][0], std::stoi(rawInstruction[1]));
+    }
+    return instructions;
+}
+
+Grid initializeGrid(uint16_t height, uint16_t width)
+{
+    return Grid(height, std::vector<char>(width, '.'));
+}
+
+void moveHead(Coordinate &currentPosition, Instruction &instruction, Grid &grid)
+{
+    switch (instruction.first)
+    {
+    case 'U':
+        currentPosition.first--;
+        break;
+    case 'D':
+        currentPosition.first++;
+        break;
+    case 'L':
+        currentPosition.second--;
+        break;
+    case 'R':
+        currentPosition.second++;
+        break;
+    default:
+        break;
+    }
+}
+
+void moveKnot(Coordinate& head, Coordinate& tail)
+{
+    int dx = head.first - tail.first;
+    int dy = head.second - tail.second;
+
+    if (std::abs(dx) > 1 || std::abs(dy) > 1)
+    {
+        if (dx == 0)
+        {
+            tail.second += dy / 2;
+            return;
+        }
+        if (dy == 0)
+        {
+            tail.first += dx / 2;
+            return;
+        }
+        tail.first += (dx > 0) ? 1 : -1;
+        tail.second += (dy > 0) ? 1 : -1;
+    }
+}
+
+void markPosition(Coordinate& position, Grid& grid)
+{
+    grid[position.first][position.second] = '#';
+}
+
+uint32_t getScore(Grid& grid)
+{
+    uint32_t score{0};
+    std::for_each(grid.begin(), grid.end(), [&] (auto& row) 
+    {
+        std::for_each(row.begin(), row.end(), [&] (auto& ch)
+        {
+            if (ch == '#') score++;
+        });
+    });
+    return score;
+}
+
+void partOne(std::vector<std::vector<std::string>> input)
+{
+    Grid grid{initializeGrid(1000, 1000)};
+    Instructions instructions{getInstructions(input)};
+
+    Coordinate head{Coordinate(500, 500)};
+    Coordinate tail{Coordinate(500, 500)};
+
+    for (Instruction& instruction : instructions)
+    {
+        for (auto _ = instruction.second; _--;)
+        {
+            moveHead(head, instruction, grid);
+            moveKnot(head, tail);
+            markPosition(tail, grid);
+        }
+    }
+    std::cout << "Day 9, part 1: " << getScore(grid) << std::endl;
+}
+
+void partTwo(std::vector<std::vector<std::string>> input)
+{
+    Grid grid{initializeGrid(1000, 1000)};
+    Instructions instructions{getInstructions(input)};
+    std::vector<Coordinate> knots(10, Coordinate(500, 500));
+    Coordinate& head{knots.front()};
+    Coordinate& tail{knots.back()};
+
+    for (Instruction& instruction : instructions)
+    {
+        for (auto _ = instruction.second; _--;)
+        {
+            moveHead(head, instruction, grid);
+            for (uint8_t i = 0; i < 9; i++)
+            {
+                moveKnot(knots[i], knots[i + 1]);
+            }
+            markPosition(tail, grid);
+        }
+    }
+    std::cout << "Day 9, part 2: " << getScore(grid) << std::endl;
+}
+}  // DayNine
 
 namespace DayEleven
 {
